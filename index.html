@@ -35,10 +35,22 @@
   h1 { font-size: 15px; font-weight: 600; letter-spacing: .28em; text-transform: uppercase; color: var(--dim); }
   .tagline { color: var(--dim); font-size: 13px; text-align: center; max-width: 44ch; }
 
-  /* ---- Device ---- */
+  /* ---- Device (flip card) ---- */
   .device {
     width: min(560px, 92vw);
     aspect-ratio: 120 / 62;
+    perspective: 1800px;
+  }
+  .device-inner {
+    position: relative;
+    width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform .7s cubic-bezier(.4, 0, .2, 1);
+  }
+  .device.flipped .device-inner { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
     background: linear-gradient(180deg, #1c1c20, #101012);
     border: 1px solid var(--edge);
     border-radius: 22px;
@@ -49,19 +61,41 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    position: relative;
   }
-  .device .brand {
+  .face.back {
+    transform: rotateY(180deg);
+    background: linear-gradient(180deg, #1a1a1e, #0d0d0f);
+    align-items: center; justify-content: center;
+    text-align: center; gap: 14px;
+  }
+  .face .brand {
     position: absolute; top: 14px; left: 22px;
     font-size: 10px; letter-spacing: .25em; text-transform: uppercase; color: #45454c;
   }
-  .device .btns { position: absolute; top: 12px; right: 18px; display: flex; gap: 8px; }
-  .device .btns button {
-    width: 22px; height: 22px; border-radius: 50%;
+  .face .btns { position: absolute; top: 12px; right: 18px; display: flex; gap: 8px; z-index: 2; }
+  .face .btns button {
+    height: 22px; min-width: 22px; padding: 0 7px; border-radius: 11px;
     background: #202024; border: 1px solid #2e2e33; color: var(--dim);
-    cursor: pointer; font-size: 13px; line-height: 1; display: grid; place-items: center;
+    cursor: pointer; font-size: 12px; line-height: 1; display: grid; place-items: center;
   }
-  .device .btns button:hover { color: var(--ink); border-color: #3d3d44; }
+  .face .btns button:hover { color: var(--ink); border-color: #3d3d44; }
+
+  /* engraved back */
+  .plate { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .plate .etch {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: clamp(20px, 4.4vw, 30px); letter-spacing: .16em; text-transform: uppercase;
+    color: #3a3a40;
+    text-shadow: 0 1px 0 rgba(255,255,255,.06), 0 -1px 1px rgba(0,0,0,.8);
+  }
+  .plate .etch.small {
+    font-size: 10px; letter-spacing: .3em; color: #4a4a52; text-shadow: 0 1px 0 rgba(255,255,255,.05);
+  }
+  .plate .specs {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: 10px; letter-spacing: .12em; color: #34343a; line-height: 1.9;
+  }
+  .plate .hr { width: 46%; height: 1px; background: #26262a; margin: 2px 0; }
 
   .screen {
     flex: 1;
@@ -97,11 +131,6 @@
     font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
     color: rgba(55,240,138,.5);
   }
-  .engrave {
-    position: absolute; bottom: 10px; left: 0; right: 0; text-align: center;
-    font-size: 9px; letter-spacing: .3em; text-transform: uppercase; color: #2f2f35;
-  }
-
   /* ---- Setup card ---- */
   .card {
     width: min(560px, 92vw);
@@ -151,17 +180,39 @@
   <h1>Shortlife</h1>
 
   <!-- Device -->
-  <div class="device">
-    <span class="brand">Shortlife</span>
-    <div class="btns">
-      <button id="bDown" title="Dimmer">−</button>
-      <button id="bUp" title="Brighter">+</button>
+  <div class="device" id="device">
+    <div class="device-inner">
+      <!-- front -->
+      <div class="face front">
+        <span class="brand">Shortlife</span>
+        <div class="btns">
+          <button id="bDown" title="Dimmer">−</button>
+          <button id="bUp" title="Brighter">+</button>
+          <button id="bFlip" title="Show back">↻</button>
+        </div>
+        <div class="screen">
+          <div class="pct" id="pct"><span class="whole">—</span></div>
+          <div class="sub" id="sub">of life lived</div>
+        </div>
+      </div>
+      <!-- back (engraving) -->
+      <div class="face back">
+        <span class="brand">Shortlife</span>
+        <div class="btns">
+          <button id="bFlipBack" title="Show front">↻</button>
+        </div>
+        <div class="plate">
+          <span class="etch small">This device belongs to</span>
+          <span class="etch" id="engrave">—</span>
+          <div class="hr"></div>
+          <div class="specs">
+            Shortlife v3 · Ghent, Belgium<br />
+            120 × 50 × 20 mm · USB-C<br />
+            <span id="serial">no. 000000 / 1 000 000</span>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="screen">
-      <div class="pct" id="pct"><span class="whole">—</span></div>
-      <div class="sub" id="sub">of life lived</div>
-    </div>
-    <span class="engrave" id="engrave"></span>
   </div>
 
   <div class="stat" id="stat"></div>
@@ -307,10 +358,19 @@ function render(ts) {
   anim = requestAnimationFrame(render);
 }
 
+// Deterministic 6-digit serial from the engraved name (0 → 999999).
+function serialFor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  const n = String(h % 1000000).padStart(6, "0");
+  return `no. ${n} / 1 000 000`;
+}
+
 function start(c) {
   cfg = c;
   cfg.birthMs = new Date(c.birth + "T00:00:00").getTime();
-  $("engrave").textContent = c.name ? `— ${c.name} —` : "";
+  $("engrave").textContent = c.name || "Unregistered";
+  $("serial").textContent = c.name ? serialFor(c.name) : "no. 000000 / 1 000 000";
   if (anim) cancelAnimationFrame(anim);
   render();
 }
@@ -321,8 +381,14 @@ function stop() {
   $("pct").innerHTML = `<span class="whole">—</span>`;
   $("sub").textContent = "of life lived";
   $("sub").style.color = ""; $("pct").style.color = ""; $("pct").style.textShadow = "";
-  $("engrave").textContent = ""; $("stat").textContent = "";
+  $("engrave").textContent = "—";
+  $("serial").textContent = "no. 000000 / 1 000 000";
+  $("device").classList.remove("flipped");
 }
+
+// --- flip ---
+$("bFlip").addEventListener("click", () => $("device").classList.add("flipped"));
+$("bFlipBack").addEventListener("click", () => $("device").classList.remove("flipped"));
 
 // --- program button ---
 $("program").addEventListener("click", () => {
