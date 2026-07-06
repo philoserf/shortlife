@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shortlife — a life in percent</title>
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --panel: #141416;
+    --edge: #26262a;
+    --ink: #e9e9ec;
+    --dim: #8a8a92;
+    --accent: #ff5a3c;
+    --screen: #05100a;
+    --glow: #37f08a;
+    --brightness: 1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #17171b 0%, var(--bg) 60%);
+    color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    gap: 28px;
+  }
+
+  h1 { font-size: 15px; font-weight: 600; letter-spacing: .28em; text-transform: uppercase; color: var(--dim); }
+  .tagline { color: var(--dim); font-size: 13px; text-align: center; max-width: 44ch; }
+
+  /* ---- Device ---- */
+  .device {
+    width: min(560px, 92vw);
+    aspect-ratio: 120 / 62;
+    background: linear-gradient(180deg, #1c1c20, #101012);
+    border: 1px solid var(--edge);
+    border-radius: 22px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.05) inset,
+      0 40px 80px -40px rgba(0,0,0,.9),
+      0 0 0 1px rgba(0,0,0,.4);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .device .brand {
+    position: absolute; top: 14px; left: 22px;
+    font-size: 10px; letter-spacing: .25em; text-transform: uppercase; color: #45454c;
+  }
+  .device .btns { position: absolute; top: 12px; right: 18px; display: flex; gap: 8px; }
+  .device .btns button {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #202024; border: 1px solid #2e2e33; color: var(--dim);
+    cursor: pointer; font-size: 13px; line-height: 1; display: grid; place-items: center;
+  }
+  .device .btns button:hover { color: var(--ink); border-color: #3d3d44; }
+
+  .screen {
+    flex: 1;
+    margin-top: 18px;
+    background:
+      radial-gradient(120% 140% at 50% 0%, #0a1a12 0%, var(--screen) 70%);
+    border-radius: 12px;
+    border: 1px solid #0d1d14;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.5) inset, 0 8px 24px -12px #000 inset;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    overflow: hidden;
+    filter: brightness(var(--brightness));
+  }
+  .pct {
+    font-family: "SF Mono", ui-monospace, "Roboto Mono", Menlo, monospace;
+    font-weight: 600;
+    color: var(--glow);
+    text-shadow: 0 0 8px rgba(55,240,138,.55), 0 0 20px rgba(55,240,138,.25);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .01em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .pct .whole { font-size: clamp(38px, 9vw, 64px); }
+  .pct .frac { font-size: clamp(20px, 4.6vw, 34px); opacity: .82; }
+  .pct .sign { font-size: clamp(20px, 4.6vw, 34px); opacity: .55; }
+  .sub {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: rgba(55,240,138,.5);
+  }
+  .engrave {
+    position: absolute; bottom: 10px; left: 0; right: 0; text-align: center;
+    font-size: 9px; letter-spacing: .3em; text-transform: uppercase; color: #2f2f35;
+  }
+
+  /* ---- Setup card ---- */
+  .card {
+    width: min(560px, 92vw);
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 16px;
+    padding: 22px;
+  }
+  .card h2 { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); margin-bottom: 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+  input, select {
+    background: #0e0e10; color: var(--ink);
+    border: 1px solid #2b2b30; border-radius: 9px;
+    padding: 10px 11px; font: inherit; font-size: 14px;
+    appearance: none;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  .seg { display: flex; gap: 8px; }
+  .seg button {
+    flex: 1; background: #0e0e10; color: var(--dim);
+    border: 1px solid #2b2b30; border-radius: 9px; padding: 10px; cursor: pointer; font: inherit;
+  }
+  .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #120a08; font-weight: 600; }
+  .row { display: flex; gap: 10px; margin-top: 18px; }
+  .primary {
+    flex: 1; background: var(--accent); color: #120a08; font-weight: 600;
+    border: none; border-radius: 10px; padding: 12px; font: inherit; font-size: 15px; cursor: pointer;
+  }
+  .primary:hover { filter: brightness(1.08); }
+  .ghost {
+    background: transparent; color: var(--dim); border: 1px solid var(--edge);
+    border-radius: 10px; padding: 12px 16px; font: inherit; cursor: pointer;
+  }
+  .ghost:hover { color: var(--ink); }
+  .hint { color: var(--dim); font-size: 12px; margin-top: 12px; }
+  .stat { color: var(--dim); font-size: 12px; text-align: center; }
+  .stat b { color: var(--ink); font-weight: 600; }
+  .hidden { display: none !important; }
+  footer { color: #55555c; font-size: 11px; text-align: center; max-width: 52ch; }
+  a { color: var(--dim); }
+</style>
+</head>
+<body>
+  <h1>Shortlife</h1>
+
+  <!-- Device -->
+  <div class="device">
+    <span class="brand">Shortlife</span>
+    <div class="btns">
+      <button id="bDown" title="Dimmer">−</button>
+      <button id="bUp" title="Brighter">+</button>
+    </div>
+    <div class="screen">
+      <div class="pct" id="pct"><span class="whole">—</span></div>
+      <div class="sub" id="sub">of life lived</div>
+    </div>
+    <span class="engrave" id="engrave"></span>
+  </div>
+
+  <div class="stat" id="stat"></div>
+
+  <!-- Setup -->
+  <div class="card" id="setup">
+    <h2>Program your device</h2>
+    <div class="grid">
+      <div class="field full">
+        <label for="name">Name (engraved on back)</label>
+        <input id="name" type="text" placeholder="Ada Lovelace" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Sex (WHO tables)</label>
+        <div class="seg" id="sex">
+          <button type="button" data-sex="female" aria-pressed="false">Female</button>
+          <button type="button" data-sex="male" aria-pressed="false">Male</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="birth">Birthday</label>
+        <input id="birth" type="date" />
+      </div>
+      <div class="field full">
+        <label for="country">Country of residence</label>
+        <select id="country"></select>
+      </div>
+    </div>
+    <div class="row">
+      <button class="primary" id="program">Program device</button>
+      <button class="ghost" id="reset">Reset</button>
+    </div>
+    <p class="hint" id="hint">Personal data is stored only in this browser and is used solely to compute the display. Nothing is sent anywhere.</p>
+  </div>
+
+  <footer>
+    An emulation of Dries Depoorter's <a href="https://driesdepoorter.be/product/shortlife-v3/" target="_blank" rel="noopener">Shortlife v3</a>.
+    Life expectancy at birth from WHO Global Health Observatory (latest available). A memento, not medical advice.
+  </footer>
+
+<script>
+"use strict";
+
+// WHO life expectancy at birth, years [male, female]. Approx. latest GHO figures.
+const LE = {
+  "World":          [70.8, 75.9],
+  "Australia":      [81.3, 85.4],
+  "Austria":        [79.4, 84.0],
+  "Belgium":        [79.3, 84.0],
+  "Brazil":         [72.0, 79.4],
+  "Canada":         [80.4, 84.1],
+  "Chile":          [77.4, 82.4],
+  "China":          [74.7, 80.5],
+  "Denmark":        [79.6, 83.3],
+  "Egypt":          [69.6, 74.1],
+  "Finland":        [79.2, 84.5],
+  "France":         [79.8, 85.7],
+  "Germany":        [78.7, 83.3],
+  "Greece":         [78.3, 83.6],
+  "Iceland":        [81.3, 84.4],
+  "India":          [69.5, 72.2],
+  "Indonesia":      [69.4, 73.3],
+  "Ireland":        [80.5, 84.0],
+  "Israel":         [80.8, 84.4],
+  "Italy":          [80.9, 84.9],
+  "Japan":          [81.5, 86.9],
+  "Mexico":         [72.1, 77.8],
+  "Netherlands":    [80.4, 83.5],
+  "New Zealand":    [80.4, 83.5],
+  "Nigeria":        [54.5, 55.8],
+  "Norway":         [81.1, 84.3],
+  "Poland":         [74.5, 81.9],
+  "Portugal":       [78.6, 84.4],
+  "Russia":         [68.2, 78.0],
+  "South Africa":   [62.2, 68.3],
+  "South Korea":    [80.3, 86.1],
+  "Spain":          [80.7, 86.2],
+  "Sweden":         [80.8, 84.0],
+  "Switzerland":    [81.8, 85.1],
+  "Turkey":         [76.4, 80.7],
+  "United Kingdom": [79.8, 83.0],
+  "United States":  [76.3, 81.4]
+};
+
+const MS_PER_YEAR = 365.2425 * 24 * 3600 * 1000;
+const $ = (id) => document.getElementById(id);
+const STORE = "shortlife.v3";
+
+// --- populate country dropdown ---
+const countrySel = $("country");
+for (const name of Object.keys(LE)) {
+  const o = document.createElement("option");
+  o.value = name; o.textContent = name;
+  countrySel.appendChild(o);
+}
+countrySel.value = "Belgium"; // nod to Ghent
+
+// --- sex toggle ---
+let sex = null;
+$("sex").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-sex]");
+  if (!btn) return;
+  sex = btn.dataset.sex;
+  for (const b of $("sex").children) b.setAttribute("aria-pressed", String(b === btn));
+});
+
+// --- config state ---
+let cfg = null;      // { name, sex, birth, country }
+let anim = null;
+
+function fmtYears(y) {
+  const w = Math.floor(y);
+  const d = Math.round((y - w) * 365.2425);
+  return `${w}y ${d}d`;
+}
+
+function render(ts) {
+  if (!cfg) return;
+  const le = LE[cfg.country][cfg.sex === "male" ? 0 : 1];
+  const lifespanMs = le * MS_PER_YEAR;
+  const livedMs = Date.now() - cfg.birthMs;
+  const pct = (livedMs / lifespanMs) * 100;
+
+  const clamped = Math.max(0, pct);
+  const s = clamped.toFixed(7);
+  const [whole, frac] = s.split(".");
+  const over = pct > 100;
+  $("pct").innerHTML =
+    `<span class="whole">${whole}</span><span class="frac">.${frac}</span><span class="sign">%</span>`;
+  $("sub").textContent = over ? "beyond expectancy" : "of life lived";
+  $("sub").style.color = over ? "rgba(255,90,60,.7)" : "";
+  $("pct").style.color = over ? "#ff7a5c" : "";
+  $("pct").style.textShadow = over
+    ? "0 0 8px rgba(255,90,60,.55), 0 0 20px rgba(255,90,60,.25)"
+    : "";
+
+  const ageY = livedMs / MS_PER_YEAR;
+  const remainY = le - ageY;
+  $("stat").innerHTML =
+    `Age <b>${fmtYears(Math.max(0, ageY))}</b> · WHO expectancy <b>${le.toFixed(1)}y</b> · ` +
+    (remainY >= 0 ? `remaining <b>${fmtYears(remainY)}</b>` : `over by <b>${fmtYears(-remainY)}</b>`);
+
+  anim = requestAnimationFrame(render);
+}
+
+function start(c) {
+  cfg = c;
+  cfg.birthMs = new Date(c.birth + "T00:00:00").getTime();
+  $("engrave").textContent = c.name ? `— ${c.name} —` : "";
+  if (anim) cancelAnimationFrame(anim);
+  render();
+}
+
+function stop() {
+  if (anim) cancelAnimationFrame(anim);
+  anim = null; cfg = null;
+  $("pct").innerHTML = `<span class="whole">—</span>`;
+  $("sub").textContent = "of life lived";
+  $("sub").style.color = ""; $("pct").style.color = ""; $("pct").style.textShadow = "";
+  $("engrave").textContent = ""; $("stat").textContent = "";
+}
+
+// --- program button ---
+$("program").addEventListener("click", () => {
+  const name = $("name").value.trim();
+  const birth = $("birth").value;
+  const country = countrySel.value;
+  if (!sex) { flash("Select a sex for the WHO table."); return; }
+  if (!birth) { flash("Enter your birthday."); return; }
+  const c = { name, sex, birth, country };
+  if (new Date(birth + "T00:00:00").getTime() > Date.now()) { flash("Birthday can't be in the future."); return; }
+  localStorage.setItem(STORE, JSON.stringify(c));
+  start(c);
+  $("hint").textContent = "Device programmed. Settings persist in this browser until reset.";
+});
+
+$("reset").addEventListener("click", () => {
+  localStorage.removeItem(STORE);
+  stop();
+  $("name").value = ""; $("birth").value = ""; sex = null;
+  for (const b of $("sex").children) b.setAttribute("aria-pressed", "false");
+  $("hint").textContent = "Personal data is stored only in this browser and is used solely to compute the display. Nothing is sent anywhere.";
+});
+
+function flash(msg) {
+  const h = $("hint"); h.textContent = msg; h.style.color = "var(--accent)";
+  setTimeout(() => (h.style.color = ""), 2200);
+}
+
+// --- brightness ---
+let brightness = 1;
+function setBrightness(b) {
+  brightness = Math.min(1.4, Math.max(0.35, b));
+  document.documentElement.style.setProperty("--brightness", brightness.toFixed(2));
+  localStorage.setItem(STORE + ".b", brightness.toFixed(2));
+}
+$("bUp").addEventListener("click", () => setBrightness(brightness + 0.15));
+$("bDown").addEventListener("click", () => setBrightness(brightness - 0.15));
+
+// --- restore ---
+(function restore() {
+  const b = parseFloat(localStorage.getItem(STORE + ".b"));
+  if (!isNaN(b)) setBrightness(b);
+  const raw = localStorage.getItem(STORE);
+  if (!raw) return;
+  try {
+    const c = JSON.parse(raw);
+    $("name").value = c.name || "";
+    $("birth").value = c.birth || "";
+    countrySel.value = c.country in LE ? c.country : "World";
+    sex = c.sex;
+    for (const btn of $("sex").children)
+      btn.setAttribute("aria-pressed", String(btn.dataset.sex === sex));
+    start(c);
+    $("hint").textContent = "Device programmed. Settings persist in this browser until reset.";
+  } catch (_) {}
+})();
+</script>
+</body>
+</html>
