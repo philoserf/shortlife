@@ -1,0 +1,27 @@
+version: "3"
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  setup:
+    desc: Install the toolchain (Brewfile)
+    cmds:
+      - brew bundle --file=Brewfile
+
+  fmt:
+    desc: Format with prettier
+    cmds:
+      - prettier --ignore-unknown --write .
+
+  check:
+    desc: Verify formatting without writing
+    cmds:
+      - prettier --ignore-unknown --check .
+
+  serve:
+    desc: Serve locally at http://localhost:8000
+    cmds:
+      - python3 -m http.server 8000
