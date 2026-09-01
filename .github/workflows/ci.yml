@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Pinned so CI and the Brewfile toolchain agree on formatting; bump both together.
+      - run: npx --yes prettier@3.9.6 --ignore-unknown --check .

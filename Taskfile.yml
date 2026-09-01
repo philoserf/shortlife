@@ -11,6 +11,13 @@ tasks:
     cmds:
       - brew bundle --file=Brewfile
 
+  update:
+    desc: Upgrade the Brewfile toolchain to current versions
+    cmds:
+      - brew upgrade prettier go-task
+      - prettier --version
+      - task --version
+
   fmt:
     desc: Format with prettier
     cmds:
