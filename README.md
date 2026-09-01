@@ -13,3 +13,7 @@ Open `index.html` in any browser. No build, no server, no dependencies.
 - All personal data stays in the browser — nothing is sent anywhere.
 
 A memento, not medical advice.
+
+## License
+
+[MIT](LICENSE) © Mark Ayers
