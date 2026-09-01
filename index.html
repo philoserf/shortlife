@@ -63,24 +63,33 @@
       }
 
       /* ---- Device (flip card) ---- */
+      /* The two faces are stacked in one grid cell, so the card is as tall as the
+         taller face. The front carries the device's 120/62 proportions; the back
+         only exceeds them while the programming panel is open. */
       .device {
         width: min(560px, 92vw);
-        aspect-ratio: 120 / 62;
         perspective: 1800px;
       }
       .device-inner {
         position: relative;
+        display: grid;
+        /* minmax(0, 1fr), not the implicit auto track: an auto track would size to
+           the panel's max-content and push both faces past the device's width. */
+        grid-template-columns: minmax(0, 1fr);
         width: 100%;
-        height: 100%;
         transform-style: preserve-3d;
         transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .device.flipped .device-inner {
         transform: rotateY(180deg);
       }
+      /* The opening face is chosen by script after first paint — don't animate it. */
+      .device.no-anim .device-inner {
+        transition: none;
+      }
       .face {
-        position: absolute;
-        inset: 0;
+        grid-area: 1 / 1;
+        position: relative;
         backface-visibility: hidden;
         background: linear-gradient(180deg, #1c1c20, #101012);
         border: 1px solid var(--edge);
@@ -93,6 +102,9 @@
         display: flex;
         flex-direction: column;
       }
+      .face.front {
+        aspect-ratio: 120 / 62;
+      }
       .face.back {
         transform: rotateY(180deg);
         background: linear-gradient(180deg, #1a1a1e, #0d0d0f);
@@ -100,6 +112,7 @@
         justify-content: center;
         text-align: center;
         gap: 14px;
+        padding: 46px 22px 22px;
       }
       .face .brand {
         position: absolute;
@@ -225,30 +238,28 @@
         text-transform: uppercase;
         color: rgba(55, 240, 138, 0.5);
       }
-      /* ---- Setup card ---- */
-      .card {
-        width: min(560px, 92vw);
-        background: var(--panel);
-        border: 1px solid var(--edge);
-        border-radius: 16px;
-        padding: 22px;
+      /* ---- Programming panel (back of device) ---- */
+      .panel {
+        align-self: stretch;
+        width: 100%;
+        text-align: left;
       }
-      .card h2 {
+      .panel h2 {
         font-size: 12px;
         letter-spacing: 0.18em;
         text-transform: uppercase;
         color: var(--dim);
-        margin-bottom: 16px;
+        margin-bottom: 14px;
       }
       .grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px 14px;
+        gap: 10px 12px;
       }
       .field {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 5px;
       }
       .field.full {
         grid-column: 1 / -1;
@@ -265,7 +276,7 @@
         color: var(--ink);
         border: 1px solid #2b2b30;
         border-radius: 9px;
-        padding: 10px 11px;
+        padding: 9px 10px;
         font: inherit;
         font-size: 14px;
         appearance: none;
@@ -285,7 +296,7 @@
         color: var(--dim);
         border: 1px solid #2b2b30;
         border-radius: 9px;
-        padding: 10px;
+        padding: 9px;
         cursor: pointer;
         font: inherit;
       }
@@ -298,7 +309,7 @@
       .row {
         display: flex;
         gap: 10px;
-        margin-top: 18px;
+        margin-top: 12px;
       }
       .primary {
         flex: 1;
@@ -307,7 +318,7 @@
         font-weight: 600;
         border: none;
         border-radius: 10px;
-        padding: 12px;
+        padding: 11px;
         font: inherit;
         font-size: 15px;
         cursor: pointer;
@@ -320,7 +331,7 @@
         color: var(--dim);
         border: 1px solid var(--edge);
         border-radius: 10px;
-        padding: 12px 16px;
+        padding: 11px 16px;
         font: inherit;
         cursor: pointer;
       }
@@ -329,8 +340,9 @@
       }
       .hint {
         color: var(--dim);
-        font-size: 12px;
-        margin-top: 12px;
+        font-size: 11px;
+        line-height: 1.45;
+        margin-top: 10px;
       }
       .stat {
         color: var(--dim);
@@ -341,7 +353,8 @@
         color: var(--ink);
         font-weight: 600;
       }
-      .hidden {
+      /* .plate and .panel set display, which would beat the UA [hidden] rule. */
+      [hidden] {
         display: none !important;
       }
       footer {
@@ -359,9 +372,9 @@
     <h1>Shortlife</h1>
 
     <!-- Device -->
-    <div class="device" id="device">
+    <div class="device no-anim" id="device">
       <div class="device-inner">
-        <!-- front -->
+        <!-- front: the screen -->
         <div class="face front">
           <span class="brand">Shortlife</span>
           <div class="btns">
@@ -374,13 +387,15 @@
             <div class="sub" id="sub">of life lived</div>
           </div>
         </div>
-        <!-- back (engraving) -->
+        <!-- back: engraving once programmed, otherwise the programming panel -->
         <div class="face back">
           <span class="brand">Shortlife</span>
           <div class="btns">
+            <button id="bEdit" title="Program device" hidden>⚙</button>
             <button id="bFlipBack" title="Show front">↻</button>
           </div>
-          <div class="plate">
+
+          <div class="plate" id="plate" hidden>
             <span class="etch small">This device belongs to</span>
             <span class="etch" id="engrave">—</span>
             <div class="hr"></div>
@@ -390,54 +405,53 @@
               <span id="serial">no. 000000 / 1 000 000</span>
             </div>
           </div>
+
+          <div class="panel" id="setup">
+            <h2>Program your device</h2>
+            <div class="grid">
+              <div class="field full">
+                <label for="name">Name (engraved on back)</label>
+                <input
+                  id="name"
+                  type="text"
+                  placeholder="Ada Lovelace"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="field">
+                <label>Sex (WHO tables)</label>
+                <div class="seg" id="sex">
+                  <button type="button" data-sex="female" aria-pressed="false">
+                    Female
+                  </button>
+                  <button type="button" data-sex="male" aria-pressed="false">
+                    Male
+                  </button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="birth">Birthday</label>
+                <input id="birth" type="date" />
+              </div>
+              <div class="field full">
+                <label for="country">Country of residence</label>
+                <select id="country"></select>
+              </div>
+            </div>
+            <div class="row">
+              <button class="primary" id="program">Program device</button>
+              <button class="ghost" id="reset">Reset</button>
+            </div>
+            <p class="hint" id="hint">
+              Personal data is stored only in this browser and is used solely to
+              compute the display. Nothing is sent anywhere.
+            </p>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="stat" id="stat"></div>
-
-    <!-- Setup -->
-    <div class="card" id="setup">
-      <h2>Program your device</h2>
-      <div class="grid">
-        <div class="field full">
-          <label for="name">Name (engraved on back)</label>
-          <input
-            id="name"
-            type="text"
-            placeholder="Ada Lovelace"
-            autocomplete="off"
-          />
-        </div>
-        <div class="field">
-          <label>Sex (WHO tables)</label>
-          <div class="seg" id="sex">
-            <button type="button" data-sex="female" aria-pressed="false">
-              Female
-            </button>
-            <button type="button" data-sex="male" aria-pressed="false">
-              Male
-            </button>
-          </div>
-        </div>
-        <div class="field">
-          <label for="birth">Birthday</label>
-          <input id="birth" type="date" />
-        </div>
-        <div class="field full">
-          <label for="country">Country of residence</label>
-          <select id="country"></select>
-        </div>
-      </div>
-      <div class="row">
-        <button class="primary" id="program">Program device</button>
-        <button class="ghost" id="reset">Reset</button>
-      </div>
-      <p class="hint" id="hint">
-        Personal data is stored only in this browser and is used solely to
-        compute the display. Nothing is sent anywhere.
-      </p>
-    </div>
 
     <footer>
       An emulation of Dries Depoorter's
@@ -581,6 +595,14 @@
         return true;
       }
 
+      // The back is either the engraved plate or the programming panel, never both.
+      // The ⚙ button is the only way back to the panel, so it hides with the panel.
+      function showBack(which) {
+        $("plate").hidden = which !== "plate";
+        $("setup").hidden = which !== "form";
+        $("bEdit").hidden = which === "form";
+      }
+
       function start(c) {
         cfg = c;
         cfg.birthMs = new Date(c.birth + "T00:00:00").getTime();
@@ -588,6 +610,8 @@
         $("serial").textContent = c.name
           ? serialFor(c.name)
           : "no. 000000 / 1 000 000";
+        showBack("plate");
+        $("device").classList.remove("flipped"); // a programmed device shows its screen
         if (anim) cancelAnimationFrame(anim);
         render();
       }
@@ -603,7 +627,9 @@
         $("pct").style.textShadow = "";
         $("engrave").textContent = "—";
         $("serial").textContent = "no. 000000 / 1 000 000";
-        $("device").classList.remove("flipped");
+        $("stat").textContent = "";
+        showBack("form");
+        $("device").classList.add("flipped"); // unprogrammed: present the panel
       }
 
       // --- flip ---
@@ -613,6 +639,7 @@
       $("bFlipBack").addEventListener("click", () =>
         $("device").classList.remove("flipped"),
       );
+      $("bEdit").addEventListener("click", () => showBack("form"));
 
       // --- program button ---
       $("program").addEventListener("click", () => {
@@ -674,26 +701,32 @@
         setBrightness(brightness - 0.15),
       );
 
-      // --- restore ---
+      // --- restore: a usable payload opens the front, anything else the panel ---
       (function restore() {
         const b = parseFloat(localStorage.getItem(STORE + ".b"));
         if (!isNaN(b)) setBrightness(b);
-        const raw = localStorage.getItem(STORE);
-        if (!raw) return;
+
+        let c = null;
         try {
-          const c = JSON.parse(raw);
-          if (!usable(c)) return;
-          $("name").value = c.name || "";
-          $("birth").value = c.birth || "";
-          countrySel.value = c.country;
-          sex = c.sex;
-          for (const btn of $("sex").children)
-            btn.setAttribute("aria-pressed", String(btn.dataset.sex === sex));
-          start(c);
-          $("hint").textContent =
-            "Device programmed. Settings persist in this browser until reset.";
+          c = JSON.parse(localStorage.getItem(STORE));
         } catch (_) {}
+        if (!usable(c)) {
+          stop();
+          return;
+        }
+        $("name").value = c.name || "";
+        $("birth").value = c.birth || "";
+        countrySel.value = c.country;
+        sex = c.sex;
+        for (const btn of $("sex").children)
+          btn.setAttribute("aria-pressed", String(btn.dataset.sex === sex));
+        start(c);
+        $("hint").textContent =
+          "Device programmed. Settings persist in this browser until reset.";
       })();
+
+      // The opening face is set above; animate only the flips the user asks for.
+      requestAnimationFrame(() => $("device").classList.remove("no-anim"));
     </script>
   </body>
 </html>
