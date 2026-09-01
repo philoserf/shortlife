@@ -2,7 +2,7 @@
 
 A browser emulation of Dries Depoorter's [Shortlife v3](https://driesdepoorter.be/product/shortlife-v3/) — a small clock that displays what percentage of your life you've lived.
 
-**[Try it →](https://philoserf.github.io/shortlife/)**
+**[Try it →](https://shortlife.philoserf.com/)**
 
 Enter your sex, birthday, and country; the device shows `age / WHO-life-expectancy × 100` and ticks up in real time. Life-expectancy figures are WHO Global Health Observatory (life expectancy at birth, by country and sex), bundled in the page.
 
