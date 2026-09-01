@@ -569,6 +569,18 @@
         return `no. ${n} / 1 000 000`;
       }
 
+      // A stored payload can be stale (a country renamed out of LE) or hand-edited.
+      // LE[cfg.country] would throw in render(); an unparseable birthday would tick
+      // "NaN.undefined%". Normalizes c in place; false means "treat as unprogrammed".
+      function usable(c) {
+        if (!c || typeof c !== "object") return false;
+        if (c.sex !== "male" && c.sex !== "female") return false;
+        const ms = new Date(c.birth + "T00:00:00").getTime();
+        if (!Number.isFinite(ms) || ms > Date.now()) return false;
+        if (!(c.country in LE)) c.country = "World";
+        return true;
+      }
+
       function start(c) {
         cfg = c;
         cfg.birthMs = new Date(c.birth + "T00:00:00").getTime();
@@ -670,9 +682,10 @@
         if (!raw) return;
         try {
           const c = JSON.parse(raw);
+          if (!usable(c)) return;
           $("name").value = c.name || "";
           $("birth").value = c.birth || "";
-          countrySel.value = c.country in LE ? c.country : "World";
+          countrySel.value = c.country;
           sex = c.sex;
           for (const btn of $("sex").children)
             btn.setAttribute("aria-pressed", String(btn.dataset.sex === sex));
