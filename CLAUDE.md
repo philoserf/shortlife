@@ -24,10 +24,13 @@ task serve      # python3 -m http.server 8000  → http://localhost:8000
 `index.html` in a browser.
 
 Prettier is canonical: `task check` is expected to pass, and `.github/workflows/ci.yml`
-enforces it on every push and PR. The Brewfile is unversioned, so `task update` always
-pulls the latest prettier, while CI pins an exact `prettier@X.Y.Z` via `npx`. **After
-`task update`, set the version in `.github/workflows/ci.yml` to match `prettier
---version`** — otherwise local `task fmt` and CI will disagree about the file.
+enforces it on every push and PR. Nothing here is version-pinned on purpose — the
+Brewfile is unversioned and CI runs `prettier@latest`, so local and CI track the same
+release by construction and there is no pin to keep in sync.
+
+The accepted cost: a prettier release that changes formatting turns CI red on a repo
+nobody touched. That is not a broken build — recover with `task update && task fmt`
+and commit the reformat on its own.
 
 The one exception is the `LE` table, which carries a `// prettier-ignore` so its
 column alignment survives. Prettier reproduces an ignored node's body verbatim, so

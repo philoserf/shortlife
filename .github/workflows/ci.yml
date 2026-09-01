@@ -13,5 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      # Pinned so CI and the Brewfile toolchain agree on formatting; bump both together.
-      - run: npx --yes prettier@3.9.6 --ignore-unknown --check .
+      # Floats at latest to match the unversioned Brewfile, so CI and `task fmt`
+      # cannot drift apart. Cost: a prettier release that changes formatting turns
+      # this red on an untouched repo. Recover with `task update && task fmt`.
+      - run: npx --yes prettier@latest --ignore-unknown --check .
