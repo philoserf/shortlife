@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shortlife — a life in percent</title>
+    <meta
+      name="description"
+      content="A browser emulation of Dries Depoorter's Shortlife v3: a clock showing what percentage of your life you have lived, from WHO life-expectancy data. Everything stays in your browser."
+    />
+    <!-- Inline so the page stays a single file and the tab shows no 404 dot. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305100a'/%3E%3Ctext x='16' y='22' font-family='ui-monospace,monospace' font-size='18' font-weight='600' text-anchor='middle' fill='%2337f08a'%3E%25%3C/text%3E%3C/svg%3E"
+    />
     <style>
       :root {
         --bg: #0a0a0b;
@@ -64,7 +73,8 @@
 
       /* ---- Device (flip card) ---- */
       /* The two faces are stacked in one grid cell, so the card is as tall as the
-         taller face. The front carries the device's 120/62 proportions; the back
+         taller face. The front carries the device's 120/50 footprint, the one
+         engraved on the plate — keep the two in step; the back
          only exceeds them while the programming panel is open. */
       .device {
         width: min(560px, 92vw);
@@ -110,7 +120,7 @@
         flex-direction: column;
       }
       .face.front {
-        aspect-ratio: 120 / 62;
+        aspect-ratio: 120 / 50; /* the engraved 120 x 50 x 20 mm */
       }
       .face.back {
         transform: rotateY(180deg);
@@ -509,7 +519,16 @@
     <script>
       "use strict";
 
-      // WHO life expectancy at birth, years [male, female]. Approx. latest GHO figures.
+      // Life expectancy at birth in years, [male, female], from the WHO Global
+      // Health Observatory — the "Life expectancy at birth (years)" indicator,
+      // latest available year per country, rounded to 0.1y. Bundled in the page:
+      // the figures move once a year at most and a network call for them would
+      // cost more than it is worth.
+      //
+      // Key order is dropdown order, so "World" leads and the rest are
+      // alphabetical. The keys are also a persistence format — a stored config
+      // names its country by this string, so renaming one silently strands
+      // everyone who chose it (they land back on "World").
       // prettier-ignore
       const LE = {
       "World":          [70.8, 75.9],
@@ -555,6 +574,13 @@
       const $ = (id) => document.getElementById(id);
       const STORE = "shortlife.v3";
 
+      // The panel's markup carries HINT_PRIVACY as its pre-script default; change
+      // the two together.
+      const HINT_PRIVACY =
+        "Personal data is stored only in this browser and is used solely to compute the display. It is never sent anywhere.";
+      const HINT_PROGRAMMED =
+        "Device programmed. Settings persist in this browser until reset.";
+
       // localStorage throws when the browser blocks site data — private windows,
       // a "block cookies" setting, a full quota. Every access goes through these
       // two, so a blocked store costs persistence and nothing else: the device
@@ -583,6 +609,11 @@
       }
       countrySel.value = "Belgium"; // nod to Ghent
 
+      // en-CA renders YYYY-MM-DD in local time, which is what a date input wants
+      // (toISOString would hand a UTC date and cut today short east of Greenwich).
+      // This only steers the picker — derive() is still what refuses a future date.
+      $("birth").max = new Date().toLocaleDateString("en-CA");
+
       // --- sex toggle ---
       let sex = null;
       $("sex").addEventListener("click", (e) => {
@@ -598,8 +629,15 @@
       let anim = null;
 
       function fmtYears(y) {
-        const w = Math.floor(y);
-        const d = Math.round((y - w) * 365.2425);
+        let w = Math.floor(y);
+        let d = Math.round((y - w) * 365.2425);
+        // A year is 365.2425 days, so the last ~18 hours of one round to 365 and
+        // would read "35y 365d". Carry instead: the year turns up to 0.74 days
+        // early, which beats showing a day count no year ever reaches.
+        if (d >= 365) {
+          w += 1;
+          d = 0;
+        }
         return `${w}y ${d}d`;
       }
 
@@ -614,7 +652,7 @@
       let shownRemain = "";
       let shownLabel = "";
 
-      function render(ts) {
+      function render() {
         if (!cfg) return;
         const { le, lifespanMs } = cfg;
         const livedMs = Date.now() - cfg.birthMs;
@@ -682,7 +720,9 @@
         const country = c.country in LE ? c.country : "World";
         const le = LE[country][c.sex === "male" ? 0 : 1];
         return {
-          name: c.name,
+          // A hand-edited payload can hold anything; everything downstream of
+          // here treats name as a string.
+          name: typeof c.name === "string" ? c.name : "",
           sex: c.sex,
           birth: c.birth,
           country,
@@ -774,8 +814,7 @@
         }
         writeStore(STORE, JSON.stringify(c)); // the stored shape, not the derived one
         start(d);
-        $("hint").textContent =
-          "Device programmed. Settings persist in this browser until reset.";
+        $("hint").textContent = HINT_PROGRAMMED;
       });
 
       $("reset").addEventListener("click", () => {
@@ -786,8 +825,7 @@
         sex = null;
         for (const b of $("sex").children)
           b.setAttribute("aria-pressed", "false");
-        $("hint").textContent =
-          "Personal data is stored only in this browser and is used solely to compute the display. It is never sent anywhere.";
+        $("hint").textContent = HINT_PRIVACY;
       });
 
       function flash(msg) {
@@ -837,8 +875,7 @@
         for (const btn of $("sex").children)
           btn.setAttribute("aria-pressed", String(btn.dataset.sex === sex));
         start(d);
-        $("hint").textContent =
-          "Device programmed. Settings persist in this browser until reset.";
+        $("hint").textContent = HINT_PROGRAMMED;
       })();
 
       // The opening face is set above; animate only the flips the user asks for.
