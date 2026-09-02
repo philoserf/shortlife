@@ -245,6 +245,18 @@
         text-transform: uppercase;
         color: rgba(55, 240, 138, 0.5);
       }
+      /* Past 100% the screen recolors from the phosphor green to the accent red.
+         rgb(255, 90, 60) is --accent; the percentage sits a shade lighter so it
+         still reads as the brighter of the two. */
+      .screen.over .pct {
+        color: #ff7a5c;
+        text-shadow:
+          0 0 8px rgba(255, 90, 60, 0.55),
+          0 0 20px rgba(255, 90, 60, 0.25);
+      }
+      .screen.over .sub {
+        color: rgba(255, 90, 60, 0.7);
+      }
       /* ---- Programming panel (back of device) ---- */
       .panel {
         align-self: stretch;
@@ -391,8 +403,12 @@
               ↻
             </button>
           </div>
-          <div class="screen">
-            <div class="pct" id="pct"><span class="whole">—</span></div>
+          <div class="screen" id="screen">
+            <div class="pct" id="pct">
+              <span class="whole" id="pctWhole">—</span
+              ><span class="frac" id="pctFrac"></span
+              ><span class="sign" id="pctSign"></span>
+            </div>
             <div class="sub" id="sub">of life lived</div>
           </div>
         </div>
@@ -474,7 +490,10 @@
       </div>
     </div>
 
-    <div class="stat" id="stat"></div>
+    <div class="stat" id="stat" hidden>
+      Age <b id="statAge">—</b> · WHO expectancy <b id="statLe">—</b> ·
+      <span id="statLabel">remaining</span> <b id="statRemain">—</b>
+    </div>
 
     <footer>
       An emulation of Dries Depoorter's
@@ -584,32 +603,55 @@
         return `${w}y ${d}d`;
       }
 
+      // What is on screen right now, so a frame that would redraw the same thing
+      // does nothing at all. At seven decimals the last digit turns about every
+      // 2.5 seconds and the age line only once a day, so the overwhelming
+      // majority of frames are no-ops. stop() clears these — it blanks the nodes
+      // behind their backs, and a stale cache would then skip the redraw.
+      let shownPct = "";
+      let shownOver = null;
+      let shownAge = "";
+      let shownRemain = "";
+      let shownLabel = "";
+
       function render(ts) {
         if (!cfg) return;
         const { le, lifespanMs } = cfg;
         const livedMs = Date.now() - cfg.birthMs;
         const pct = (livedMs / lifespanMs) * 100;
 
-        const clamped = Math.max(0, pct);
-        const s = clamped.toFixed(7);
-        const [whole, frac] = s.split(".");
+        const s = Math.max(0, pct).toFixed(7);
+        if (s !== shownPct) {
+          const dot = s.indexOf(".");
+          $("pctWhole").textContent = s.slice(0, dot);
+          $("pctFrac").textContent = s.slice(dot);
+          shownPct = s;
+        }
+
         const over = pct > 100;
-        $("pct").innerHTML =
-          `<span class="whole">${whole}</span><span class="frac">.${frac}</span><span class="sign">%</span>`;
-        $("sub").textContent = over ? "beyond expectancy" : "of life lived";
-        $("sub").style.color = over ? "rgba(255,90,60,.7)" : "";
-        $("pct").style.color = over ? "#ff7a5c" : "";
-        $("pct").style.textShadow = over
-          ? "0 0 8px rgba(255,90,60,.55), 0 0 20px rgba(255,90,60,.25)"
-          : "";
+        if (over !== shownOver) {
+          $("screen").classList.toggle("over", over);
+          $("sub").textContent = over ? "beyond expectancy" : "of life lived";
+          shownOver = over;
+        }
 
         const ageY = livedMs / MS_PER_YEAR;
         const remainY = le - ageY;
-        $("stat").innerHTML =
-          `Age <b>${fmtYears(Math.max(0, ageY))}</b> · WHO expectancy <b>${le.toFixed(1)}y</b> · ` +
-          (remainY >= 0
-            ? `remaining <b>${fmtYears(remainY)}</b>`
-            : `over by <b>${fmtYears(-remainY)}</b>`);
+        const age = fmtYears(Math.max(0, ageY));
+        if (age !== shownAge) {
+          $("statAge").textContent = age;
+          shownAge = age;
+        }
+        const label = remainY >= 0 ? "remaining" : "over by";
+        if (label !== shownLabel) {
+          $("statLabel").textContent = label;
+          shownLabel = label;
+        }
+        const remain = fmtYears(Math.abs(remainY));
+        if (remain !== shownRemain) {
+          $("statRemain").textContent = remain;
+          shownRemain = remain;
+        }
 
         anim = requestAnimationFrame(render);
       }
@@ -674,6 +716,9 @@
         $("serial").textContent = d.name
           ? serialFor(d.name)
           : "no. 000000 / 1 000 000";
+        $("pctSign").textContent = "%";
+        $("statLe").textContent = `${d.le.toFixed(1)}y`; // fixed for this config
+        $("stat").hidden = false;
         showBack("plate");
         showFace("front"); // a programmed device shows its screen
         if (anim) cancelAnimationFrame(anim);
@@ -684,14 +729,19 @@
         if (anim) cancelAnimationFrame(anim);
         anim = null;
         cfg = null;
-        $("pct").innerHTML = `<span class="whole">—</span>`;
+        $("pctWhole").textContent = "—";
+        $("pctFrac").textContent = "";
+        $("pctSign").textContent = "";
         $("sub").textContent = "of life lived";
-        $("sub").style.color = "";
-        $("pct").style.color = "";
-        $("pct").style.textShadow = "";
+        $("screen").classList.remove("over");
         $("engrave").textContent = "—";
         $("serial").textContent = "no. 000000 / 1 000 000";
-        $("stat").textContent = "";
+        $("stat").hidden = true;
+        shownPct = "";
+        shownOver = null;
+        shownAge = "";
+        shownRemain = "";
+        shownLabel = "";
         showBack("form");
         showFace("back"); // unprogrammed: present the panel
       }
