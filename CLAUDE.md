@@ -47,7 +47,8 @@ Everything lives in `index.html`: markup, styles, and the tick logic.
   `Object.keys(LE)`, so **key order is dropdown order** — `"World"` is
   deliberately first, the rest alphabetical.
 - **Derived config** — `derive(c)` is the only place a stored or entered config
-  becomes something the render loop can drive: it holds the sole `new Date(` parse,
+  becomes something the render loop can drive: it holds the only date **parse** in
+  the file (the other `new Date()` is today's date, for the birthday input's `max`),
   the country fallback and the `LE` lookup, and returns a **new** object carrying
   `birthMs`, `le` and `lifespanMs`, or `null` for "treat as unprogrammed". The
   argument keeps the four-key shape that goes to storage — `cfg` is always the
