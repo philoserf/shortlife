@@ -513,6 +513,24 @@
       const $ = (id) => document.getElementById(id);
       const STORE = "shortlife.v3";
 
+      // localStorage throws when the browser blocks site data — private windows,
+      // a "block cookies" setting, a full quota. Every access goes through these
+      // two, so a blocked store costs persistence and nothing else: the device
+      // still programs and ticks, it just forgets. Writing null removes the key.
+      function readStore(key) {
+        try {
+          return localStorage.getItem(key);
+        } catch (_) {
+          return null;
+        }
+      }
+      function writeStore(key, value) {
+        try {
+          if (value === null) localStorage.removeItem(key);
+          else localStorage.setItem(key, value);
+        } catch (_) {}
+      }
+
       // --- populate country dropdown ---
       const countrySel = $("country");
       for (const name of Object.keys(LE)) {
@@ -659,14 +677,14 @@
           flash("Birthday can't be in the future.");
           return;
         }
-        localStorage.setItem(STORE, JSON.stringify(c));
+        writeStore(STORE, JSON.stringify(c));
         start(c);
         $("hint").textContent =
           "Device programmed. Settings persist in this browser until reset.";
       });
 
       $("reset").addEventListener("click", () => {
-        localStorage.removeItem(STORE);
+        writeStore(STORE, null);
         stop();
         $("name").value = "";
         $("birth").value = "";
@@ -692,7 +710,7 @@
           "--brightness",
           brightness.toFixed(2),
         );
-        localStorage.setItem(STORE + ".b", brightness.toFixed(2));
+        writeStore(STORE + ".b", brightness.toFixed(2));
       }
       $("bUp").addEventListener("click", () =>
         setBrightness(brightness + 0.15),
@@ -703,12 +721,12 @@
 
       // --- restore: a usable payload opens the front, anything else the panel ---
       (function restore() {
-        const b = parseFloat(localStorage.getItem(STORE + ".b"));
+        const b = parseFloat(readStore(STORE + ".b"));
         if (!isNaN(b)) setBrightness(b);
 
         let c = null;
         try {
-          c = JSON.parse(localStorage.getItem(STORE));
+          c = JSON.parse(readStore(STORE));
         } catch (_) {}
         if (!usable(c)) {
           stop();
