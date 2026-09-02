@@ -13,7 +13,7 @@ The device opens on its back. Fill in the panel, press **Program device**, and i
 - `↻` flips the device by hand; `⚙` on the back reopens the programming panel.
 - Settings persist in `localStorage`; **Reset** clears them and returns the panel.
 - `+` / `−` adjust screen brightness.
-- All personal data stays in the browser — nothing is sent anywhere.
+- All personal data stays in the browser — it is never sent anywhere. The page loads Cloudflare Web Analytics, which counts visits and sends no personal data.
 
 ## Run locally
 
