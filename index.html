@@ -444,7 +444,7 @@
             </div>
             <p class="hint" id="hint">
               Personal data is stored only in this browser and is used solely to
-              compute the display. Nothing is sent anywhere.
+              compute the display. It is never sent anywhere.
             </p>
           </div>
         </div>
@@ -674,7 +674,7 @@
         for (const b of $("sex").children)
           b.setAttribute("aria-pressed", "false");
         $("hint").textContent =
-          "Personal data is stored only in this browser and is used solely to compute the display. Nothing is sent anywhere.";
+          "Personal data is stored only in this browser and is used solely to compute the display. It is never sent anywhere.";
       });
 
       function flash(msg) {
@@ -728,5 +728,12 @@
       // The opening face is set above; animate only the flips the user asks for.
       requestAnimationFrame(() => $("device").classList.remove("no-anim"));
     </script>
+    <!-- Cloudflare Web Analytics -->
+    <script
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "1af43dc14bbd46bf940a7346acbe5d46"}'
+    ></script>
+    <!-- End Cloudflare Web Analytics -->
   </body>
 </html>
