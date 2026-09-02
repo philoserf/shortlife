@@ -575,7 +575,7 @@
       });
 
       // --- config state ---
-      let cfg = null; // { name, sex, birth, country }
+      let cfg = null; // a derived config, never the stored shape — see derive()
       let anim = null;
 
       function fmtYears(y) {
@@ -586,8 +586,7 @@
 
       function render(ts) {
         if (!cfg) return;
-        const le = LE[cfg.country][cfg.sex === "male" ? 0 : 1];
-        const lifespanMs = le * MS_PER_YEAR;
+        const { le, lifespanMs } = cfg;
         const livedMs = Date.now() - cfg.birthMs;
         const pct = (livedMs / lifespanMs) * 100;
 
@@ -624,16 +623,31 @@
         return `no. ${n} / 1 000 000`;
       }
 
-      // A stored payload can be stale (a country renamed out of LE) or hand-edited.
-      // LE[cfg.country] would throw in render(); an unparseable birthday would tick
-      // "NaN.undefined%". Normalizes c in place; false means "treat as unprogrammed".
-      function usable(c) {
-        if (!c || typeof c !== "object") return false;
-        if (c.sex !== "male" && c.sex !== "female") return false;
-        const ms = new Date(c.birth + "T00:00:00").getTime();
-        if (!Number.isFinite(ms) || ms > Date.now()) return false;
-        if (!(c.country in LE)) c.country = "World";
-        return true;
+      // The one place a stored or freshly entered config becomes something the
+      // render loop can drive: the birthday parse, the country fallback and the
+      // LE lookup all happen here, once, and the result carries them.
+      //
+      // Returns a NEW object; the argument keeps the shape that goes to storage.
+      // null means "treat as unprogrammed" — a stored payload can outlive the code
+      // that wrote it, and LE[c.country] would throw in render() while an
+      // unparseable birthday would tick "NaN.undefined%". A country that is no
+      // longer an LE key is not fatal: it falls back to World.
+      function derive(c) {
+        if (!c || typeof c !== "object") return null;
+        if (c.sex !== "male" && c.sex !== "female") return null;
+        const birthMs = new Date(c.birth + "T00:00:00").getTime();
+        if (!Number.isFinite(birthMs) || birthMs > Date.now()) return null;
+        const country = c.country in LE ? c.country : "World";
+        const le = LE[country][c.sex === "male" ? 0 : 1];
+        return {
+          name: c.name,
+          sex: c.sex,
+          birth: c.birth,
+          country,
+          birthMs,
+          le,
+          lifespanMs: le * MS_PER_YEAR,
+        };
       }
 
       // The back is either the engraved plate or the programming panel, never both.
@@ -654,12 +668,11 @@
         $("faceBack").inert = !back;
       }
 
-      function start(c) {
-        cfg = c;
-        cfg.birthMs = new Date(c.birth + "T00:00:00").getTime();
-        $("engrave").textContent = c.name || "Unregistered";
-        $("serial").textContent = c.name
-          ? serialFor(c.name)
+      function start(d) {
+        cfg = d;
+        $("engrave").textContent = d.name || "Unregistered";
+        $("serial").textContent = d.name
+          ? serialFor(d.name)
           : "no. 000000 / 1 000 000";
         showBack("plate");
         showFace("front"); // a programmed device shows its screen
@@ -702,12 +715,15 @@
           return;
         }
         const c = { name, sex, birth, country };
-        if (new Date(birth + "T00:00:00").getTime() > Date.now()) {
+        // sex and birth are checked above and country comes from the select, so
+        // the only way derive() can refuse what this panel produces is the date.
+        const d = derive(c);
+        if (!d) {
           flash("Birthday can't be in the future.");
           return;
         }
-        writeStore(STORE, JSON.stringify(c));
-        start(c);
+        writeStore(STORE, JSON.stringify(c)); // the stored shape, not the derived one
+        start(d);
         $("hint").textContent =
           "Device programmed. Settings persist in this browser until reset.";
       });
@@ -757,17 +773,20 @@
         try {
           c = JSON.parse(readStore(STORE));
         } catch (_) {}
-        if (!usable(c)) {
+        const d = derive(c);
+        if (!d) {
           stop();
           return;
         }
-        $("name").value = c.name || "";
-        $("birth").value = c.birth || "";
-        countrySel.value = c.country;
-        sex = c.sex;
+        // Fill the panel from the derived config, so a country that fell back to
+        // World shows as World rather than a name the dropdown no longer has.
+        $("name").value = d.name || "";
+        $("birth").value = d.birth;
+        countrySel.value = d.country;
+        sex = d.sex;
         for (const btn of $("sex").children)
           btn.setAttribute("aria-pressed", String(btn.dataset.sex === sex));
-        start(c);
+        start(d);
         $("hint").textContent =
           "Device programmed. Settings persist in this browser until reset.";
       })();
