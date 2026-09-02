@@ -46,6 +46,12 @@ Everything lives in `index.html`: markup, styles, and the tick logic.
   a country means adding one line. The country `<select>` is built from
   `Object.keys(LE)`, so **key order is dropdown order** — `"World"` is
   deliberately first, the rest alphabetical.
+- **Derived config** — `derive(c)` is the only place a stored or entered config
+  becomes something the render loop can drive: it holds the sole `new Date(` parse,
+  the country fallback and the `LE` lookup, and returns a **new** object carrying
+  `birthMs`, `le` and `lifespanMs`, or `null` for "treat as unprogrammed". The
+  argument keeps the four-key shape that goes to storage — `cfg` is always the
+  derived object, never the stored one, so nothing derived can leak into a write.
 - **Render loop** — `render()` reschedules itself with `requestAnimationFrame` and
   redraws 7 decimal places every frame. `start(cfg)` / `stop()` own that loop via
   the `anim` handle; always cancel before restarting.
@@ -90,8 +96,8 @@ reset. All personal data stays in the browser; it is never transmitted. The page
 itself makes no network calls — any analytics is injected by the proxy in front of
 it, so no beacon or tracking script belongs in `index.html`.
 
-`restore()` runs a stored payload through `usable()` before programming the device,
-because that payload can outlive the code that wrote it. A country that is no longer
+`restore()` and **Program device** both run their config through `derive()` before
+programming the device, because a stored payload can outlive the code that wrote it. A country that is no longer
 an `LE` key falls back to `"World"`; a bad `sex` or an unparseable/future `birth` is
 treated as unprogrammed, which leaves the device on its back showing the panel.
 **Renaming or removing an `LE` key strands everyone who stored it** — they silently
