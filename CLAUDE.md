@@ -54,8 +54,11 @@ Everything lives in `index.html`: markup, styles, and the tick logic.
   by assigning `""` on the way back down).
 - **Serial number** — deterministic `h * 31 + charCode` hash of the engraved name,
   so the same name always yields the same "no. NNNNNN / 1 000 000".
-- **Device** — the whole page is the device: a CSS 3D flip card whose `↻` buttons
-  toggle `.flipped` on `#device`. The front is the screen; the **back has two
+- **Device** — the whole page is the device: a CSS 3D flip card. Only `showFace()`
+  touches `.flipped` on `#device`, because it also sets `inert` on whichever face is
+  turned away — both faces stay in the DOM, so without it the keyboard tabs straight
+  into controls nobody can see. Add no `classList` call for `.flipped` outside it.
+  The front is the screen; the **back has two
   states**, swapped by `showBack("plate" | "form")` — the engraved plate once the
   device is programmed, the **Program your device** panel (`#setup`) when it is not.
   `⚙` on the back reopens the panel; it hides while the panel is already showing.
@@ -63,9 +66,9 @@ Everything lives in `index.html`: markup, styles, and the tick logic.
   `.face.front` carries the 120/62 proportions and the back only exceeds them while
   the panel is open. `#device` starts with `no-anim` so the opening face, chosen by
   script after first paint, does not animate a flip on load.
-- **Which face opens** — `start()` shows the plate and unflips to the front;
-  `stop()` shows the panel and **flips to the back**. Every transition goes through
-  one of those two, so a valid stored config opens on the ticking front and anything
+- **Which face opens** — `start()` shows the plate and turns to the front; `stop()`
+  shows the panel and **turns to the back**. Every transition goes through one of
+  those two, so a valid stored config opens on the ticking front and anything
   else opens on the panel.
 - **Brightness** — `+` / `−` write a `--brightness` custom property on `:root`,
   applied as `filter: brightness()` on `.screen` only, clamped to 0.35–1.4.
