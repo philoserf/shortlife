@@ -87,6 +87,13 @@
       .device.no-anim .device-inner {
         transition: none;
       }
+      /* The flip is decoration; the face swap still happens, just without the
+         half-second rotation. */
+      @media (prefers-reduced-motion: reduce) {
+        .device-inner {
+          transition: none;
+        }
+      }
       .face {
         grid-area: 1 / 1;
         position: relative;
@@ -375,12 +382,14 @@
     <div class="device no-anim" id="device">
       <div class="device-inner">
         <!-- front: the screen -->
-        <div class="face front">
+        <div class="face front" id="faceFront">
           <span class="brand">Shortlife</span>
           <div class="btns">
-            <button id="bDown" title="Dimmer">−</button>
-            <button id="bUp" title="Brighter">+</button>
-            <button id="bFlip" title="Show back">↻</button>
+            <button id="bDown" title="Dimmer" aria-label="Dimmer">−</button>
+            <button id="bUp" title="Brighter" aria-label="Brighter">+</button>
+            <button id="bFlip" title="Show back" aria-label="Show back">
+              ↻
+            </button>
           </div>
           <div class="screen">
             <div class="pct" id="pct"><span class="whole">—</span></div>
@@ -388,11 +397,20 @@
           </div>
         </div>
         <!-- back: engraving once programmed, otherwise the programming panel -->
-        <div class="face back">
+        <div class="face back" id="faceBack" inert>
           <span class="brand">Shortlife</span>
           <div class="btns">
-            <button id="bEdit" title="Program device" hidden>⚙</button>
-            <button id="bFlipBack" title="Show front">↻</button>
+            <button
+              id="bEdit"
+              title="Program device"
+              aria-label="Program device"
+              hidden
+            >
+              ⚙
+            </button>
+            <button id="bFlipBack" title="Show front" aria-label="Show front">
+              ↻
+            </button>
           </div>
 
           <div class="plate" id="plate" hidden>
@@ -419,8 +437,13 @@
                 />
               </div>
               <div class="field">
-                <label>Sex (WHO tables)</label>
-                <div class="seg" id="sex">
+                <label id="sexLabel">Sex (WHO tables)</label>
+                <div
+                  class="seg"
+                  id="sex"
+                  role="group"
+                  aria-labelledby="sexLabel"
+                >
                   <button type="button" data-sex="female" aria-pressed="false">
                     Female
                   </button>
@@ -442,7 +465,7 @@
               <button class="primary" id="program">Program device</button>
               <button class="ghost" id="reset">Reset</button>
             </div>
-            <p class="hint" id="hint">
+            <p class="hint" id="hint" aria-live="polite">
               Personal data is stored only in this browser and is used solely to
               compute the display. It is never sent anywhere.
             </p>
@@ -621,6 +644,16 @@
         $("bEdit").hidden = which === "form";
       }
 
+      // The hidden face stays in the DOM and stays focusable, so Tab from the
+      // screen would walk into controls nobody can see. inert has to track
+      // .flipped exactly; every flip goes through here so the two cannot drift.
+      function showFace(which) {
+        const back = which === "back";
+        $("device").classList.toggle("flipped", back);
+        $("faceFront").inert = back;
+        $("faceBack").inert = !back;
+      }
+
       function start(c) {
         cfg = c;
         cfg.birthMs = new Date(c.birth + "T00:00:00").getTime();
@@ -629,7 +662,7 @@
           ? serialFor(c.name)
           : "no. 000000 / 1 000 000";
         showBack("plate");
-        $("device").classList.remove("flipped"); // a programmed device shows its screen
+        showFace("front"); // a programmed device shows its screen
         if (anim) cancelAnimationFrame(anim);
         render();
       }
@@ -647,16 +680,12 @@
         $("serial").textContent = "no. 000000 / 1 000 000";
         $("stat").textContent = "";
         showBack("form");
-        $("device").classList.add("flipped"); // unprogrammed: present the panel
+        showFace("back"); // unprogrammed: present the panel
       }
 
       // --- flip ---
-      $("bFlip").addEventListener("click", () =>
-        $("device").classList.add("flipped"),
-      );
-      $("bFlipBack").addEventListener("click", () =>
-        $("device").classList.remove("flipped"),
-      );
+      $("bFlip").addEventListener("click", () => showFace("back"));
+      $("bFlipBack").addEventListener("click", () => showFace("front"));
       $("bEdit").addEventListener("click", () => showBack("form"));
 
       // --- program button ---
