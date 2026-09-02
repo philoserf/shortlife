@@ -52,12 +52,17 @@ Everything lives in `index.html`: markup, styles, and the tick logic.
   `birthMs`, `le` and `lifespanMs`, or `null` for "treat as unprogrammed". The
   argument keeps the four-key shape that goes to storage — `cfg` is always the
   derived object, never the stored one, so nothing derived can leak into a write.
-- **Render loop** — `render()` reschedules itself with `requestAnimationFrame` and
-  redraws 7 decimal places every frame. `start(cfg)` / `stop()` own that loop via
-  the `anim` handle; always cancel before restarting.
+- **Render loop** — `render()` reschedules itself with `requestAnimationFrame`,
+  computes 7 decimal places every frame and writes to the DOM only when a string
+  actually changed. The display nodes (`#pctWhole`, `#pctFrac`, `#pctSign`, the
+  four `#stat*` nodes) live in the markup and are only ever assigned
+  `textContent` — **no `innerHTML` anywhere**. The `shown*` variables mirror
+  what is on screen; `stop()` blanks the nodes, so it must clear them too or the
+  next redraw is skipped. `start(cfg)` / `stop()` own the loop via the `anim`
+  handle; always cancel before restarting.
 - **Over-expectancy state** — past 100% the display flips to "beyond expectancy"
-  and recolors to the accent red via inline styles set in `render()` (and cleared
-  by assigning `""` on the way back down).
+  and recolors to the accent red through the `over` class on `#screen`; the
+  colours live in CSS, not in `render()`.
 - **Serial number** — deterministic `h * 31 + charCode` hash of the engraved name,
   so the same name always yields the same "no. NNNNNN / 1 000 000".
 - **Device** — the whole page is the device: a CSS 3D flip card. Only `showFace()`
