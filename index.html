@@ -73,7 +73,8 @@
 
       /* ---- Device (flip card) ---- */
       /* The two faces are stacked in one grid cell, so the card is as tall as the
-         taller face. The front carries the device's 120/62 proportions; the back
+         taller face. The front carries the device's 120/50 footprint, the one
+         engraved on the plate — keep the two in step; the back
          only exceeds them while the programming panel is open. */
       .device {
         width: min(560px, 92vw);
@@ -119,7 +120,7 @@
         flex-direction: column;
       }
       .face.front {
-        aspect-ratio: 120 / 62;
+        aspect-ratio: 120 / 50; /* the engraved 120 x 50 x 20 mm */
       }
       .face.back {
         transform: rotateY(180deg);
