@@ -79,9 +79,9 @@ Two `localStorage` keys, both written eagerly:
 - `shortlife.v3.b` — brightness, written on every `+` / `−`.
 
 **Reset removes only `shortlife.v3`** — brightness deliberately persists across a
-reset. All personal data stays in the browser; it is never transmitted. The one
-network call on the page is the Cloudflare Web Analytics beacon before `</body>`,
-which counts visits and carries no config data.
+reset. All personal data stays in the browser; it is never transmitted. The page
+itself makes no network calls — any analytics is injected by the proxy in front of
+it, so no beacon or tracking script belongs in `index.html`.
 
 `restore()` runs a stored payload through `usable()` before programming the device,
 because that payload can outlive the code that wrote it. A country that is no longer
