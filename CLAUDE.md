@@ -72,7 +72,11 @@ Everything lives in `index.html`: markup, styles, and the tick logic.
 
 ### Persistence
 
-Two `localStorage` keys, both written eagerly:
+Two `localStorage` keys, both written eagerly, and every access goes through
+`readStore` / `writeStore` — `localStorage` throws outright when the browser
+blocks site data, and an unguarded read in `restore()` leaves the page stranded
+on a dead front face. Writing `null` removes a key. Add no raw `localStorage`
+call outside those two functions:
 
 - `shortlife.v3` — the config JSON (`name`, `sex`, `birth`, `country`), written by
   **Program device** and restored on load.
