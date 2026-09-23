@@ -1,5 +1,7 @@
 # Shortlife
 
+![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)
+
 A browser emulation of Dries Depoorter's [Shortlife v3](https://driesdepoorter.be/product/shortlife-v3/) — a small clock that displays what percentage of your life you've lived.
 
 **[Try it →](https://shortlife.philoserf.com/)**
