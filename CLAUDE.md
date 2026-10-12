@@ -23,10 +23,8 @@ task serve      # python3 -m http.server 8000  → http://localhost:8000
 `task serve` is only needed for a localhost origin — otherwise just open
 `index.html` in a browser.
 
-Prettier is canonical: `task check` is expected to pass, and `.github/workflows/ci.yml`
-enforces it on every push and PR. Nothing here is version-pinned on purpose — the
-Brewfile is unversioned and CI runs `prettier@latest`, so local and CI track the same
-release by construction and there is no pin to keep in sync.
+Prettier is canonical: `task check` is expected to pass. Nothing here is version-pinned
+on purpose — the Brewfile is unversioned, so there is no pin to keep in sync.
 
 The accepted cost: a prettier release that changes formatting turns CI red on a repo
 nobody touched. That is not a broken build — recover with `task update && task fmt`
