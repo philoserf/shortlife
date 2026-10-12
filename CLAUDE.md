@@ -46,11 +46,11 @@ lives in `localStorage` under that origin, and any other hostname silently reset
 
 No CI service is in the deploy path, and pushing deploys nothing. Run
 `/release-gate` before a release, then `task deploy` from `almanac` or `sextant`
-with `task setup` done. `sextant` authenticates with `bunx wrangler login`, run once
-from a real terminal (Wrangler refuses to log in without a TTY, so a `!` shell in
-Claude Code fails until it has); headless
-`almanac` uses a Cloudflare API token from its login keychain
-(`cloudflare-api-token`), which `task deploy` exports only when the lookup succeeds.
+with `task setup` done. Both machines authenticate with `bunx wrangler login`, run
+once from a real terminal (Wrangler refuses to log in without a TTY, so a `!` shell
+in Claude Code fails until it has). If a Cloudflare API token is in the login
+keychain as `cloudflare-api-token`, `task deploy` exports it and Wrangler uses it
+instead — no machine has one today.
 
 ## Architecture
 
