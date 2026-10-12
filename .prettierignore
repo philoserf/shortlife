@@ -1,2 +1,3 @@
 # Ignored through the global core.excludesfile, which prettier does not read.
 .issues/
+.wrangler/
