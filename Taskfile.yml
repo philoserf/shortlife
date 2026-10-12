@@ -14,9 +14,10 @@ tasks:
   update:
     desc: Upgrade the Brewfile toolchain to current versions
     cmds:
-      - brew upgrade prettier go-task
+      - brew upgrade prettier go-task bun
       - prettier --version
       - task --version
+      - bun --version
 
   fmt:
     desc: Format with prettier
@@ -29,6 +30,16 @@ tasks:
       - prettier --ignore-unknown --check .
 
   serve:
-    desc: Serve locally at http://localhost:8000
+    desc: Serve public/ locally at http://localhost:8000, as the Worker does
     cmds:
-      - python3 -m http.server 8000
+      - bunx wrangler dev --port 8000
+
+  deploy:
+    desc: Check formatting, then deploy to Cloudflare
+    cmds:
+      - task: check
+      - |
+        if token=$(security find-generic-password -s cloudflare-api-token -w 2>/dev/null); then
+          export CLOUDFLARE_API_TOKEN="$token"
+        fi
+        bunx wrangler deploy

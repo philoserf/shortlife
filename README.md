@@ -19,7 +19,7 @@ The device opens on its back. Fill in the panel, press **Program device**, and i
 
 ## Run locally
 
-Open `index.html` in any browser. No build, no server, no dependencies.
+Open `public/index.html` in any browser. No build, no server, no dependencies.
 
 Everything — markup, styles, the tick logic, and the life-expectancy table — lives in that one file.
 

@@ -6,38 +6,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Single-page static web app — a browser emulation of Dries Depoorter's _Shortlife v3_
 clock (displays `age / WHO-life-expectancy × 100`, ticking in real time). Vanilla
-HTML/CSS/JS in one `index.html`. No build, no framework, no runtime dependencies,
+HTML/CSS/JS in one `public/index.html`. No build, no framework, no runtime dependencies,
 no tests.
 
 ## Commands
 
 ```bash
 task            # list tasks
-task setup      # brew bundle --file=Brewfile (installs prettier, go-task)
+task setup      # brew bundle --file=Brewfile (installs prettier, go-task, bun)
 task update     # brew upgrade the toolchain to current versions
 task fmt        # prettier --ignore-unknown --write .
 task check      # prettier --ignore-unknown --check .  (verify without writing)
-task serve      # python3 -m http.server 8000  → http://localhost:8000
+task serve      # bunx wrangler dev --port 8000  → http://localhost:8000
+task deploy     # task check, then bunx wrangler deploy
 ```
 
-`task serve` is only needed for a localhost origin — otherwise just open
-`index.html` in a browser.
+`task serve` runs the Worker locally, so it serves only `public/` and 404s
+everything else, as production does. Opening `public/index.html` directly in a
+browser also works.
 
 Prettier is canonical: `task check` is expected to pass. Nothing here is version-pinned
 on purpose — the Brewfile is unversioned, so there is no pin to keep in sync.
 
-The accepted cost: a prettier release that changes formatting turns CI red on a repo
-nobody touched. That is not a broken build — recover with `task update && task fmt`
-and commit the reformat on its own.
+The accepted cost: a prettier release that changes formatting makes `task check`
+fail, and so `task deploy` refuse, on a repo nobody touched. That is not a broken
+build — recover with `task update && task fmt` and commit the reformat on its own.
 
 The one exception is the `LE` table, which carries a `// prettier-ignore` so its
 column alignment survives. Prettier reproduces an ignored node's body verbatim, so
 that block's indentation is maintained by hand — keep new entries at the same
 6-space depth as their neighbors.
 
+## Deploy
+
+Hosting is a Cloudflare Worker serving static assets from `public/` — only that
+directory is published (`wrangler.jsonc`), so repo files never reach the site.
+The hostname `shortlife.philoserf.com` must not change: every visitor's device
+lives in `localStorage` under that origin, and any other hostname silently resets it.
+
+No CI service is in the deploy path, and pushing deploys nothing. Run
+`/release-gate` before a release, then `task deploy` from `almanac` or `sextant`
+with `task setup` done. Both machines authenticate with `bunx wrangler login`, run
+once from a real terminal (Wrangler refuses to log in without a TTY, so a `!` shell
+in Claude Code fails until it has). If a Cloudflare API token is in the login
+keychain as `cloudflare-api-token`, `task deploy` exports it and Wrangler uses it
+instead — no machine has one today.
+
 ## Architecture
 
-Everything lives in `index.html`: markup, styles, and the tick logic.
+Everything lives in `public/index.html`: markup, styles, and the tick logic.
 
 - **`LE`** — WHO Global Health Observatory life expectancy at birth, bundled in the
   page; no network calls. One entry per country, `[male, female]` in years. Adding
@@ -97,8 +114,10 @@ call outside those two functions:
 
 **Reset removes only `shortlife.v3`** — brightness deliberately persists across a
 reset. All personal data stays in the browser; it is never transmitted. The page
-itself makes no network calls — any analytics is injected by the proxy in front of
-it, so no beacon or tracking script belongs in `index.html`.
+itself makes no network calls. Scripts on the live page that are not in the file
+(Rocket Loader, the `/cdn-cgi/challenge-platform/` bot-detection script) are
+injected by the Cloudflare zone, not by the page; no beacon or tracking script
+belongs in `public/index.html`.
 
 `restore()` and **Program device** both run their config through `derive()` before
 programming the device, because a stored payload can outlive the code that wrote it. A country that is no longer
