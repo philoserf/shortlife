@@ -90,7 +90,8 @@ Everything lives in `public/index.html`: markup, styles, and the tick logic.
   device is programmed, the **Program your device** panel (`#setup`) when it is not.
   `⚙` on the back reopens the panel; it hides while the panel is already showing.
   The faces are stacked in one grid cell, so the card is as tall as the taller face:
-  `.face.front` carries the 120/62 proportions and the back only exceeds them while
+  `.face.front` carries the 120/50 footprint engraved on the plate ("120 × 50 × 20
+  mm" — keep the two in step) and the back only exceeds it while
   the panel is open. `#device` starts with `no-anim` so the opening face, chosen by
   script after first paint, does not animate a flip on load.
 - **Which face opens** — `start()` shows the plate and turns to the front; `stop()`
@@ -114,10 +115,12 @@ call outside those two functions:
 
 **Reset removes only `shortlife.v3`** — brightness deliberately persists across a
 reset. All personal data stays in the browser; it is never transmitted. The page
-itself makes no network calls. Scripts on the live page that are not in the file
-(Rocket Loader, the `/cdn-cgi/challenge-platform/` bot-detection script) are
-injected by the Cloudflare zone, not by the page; no beacon or tracking script
-belongs in `public/index.html`.
+itself makes no network calls. Anything on the live page that is not in the file —
+markup referencing `/cdn-cgi/`, and the inline `__CF$cv$params` script that loads
+the challenge-platform bot-detection script — is injected by the Cloudflare zone,
+not by the page; which features inject what changes with zone settings. Check with
+`curl -s https://shortlife.philoserf.com/ | diff public/index.html -`. No beacon or
+tracking script belongs in `public/index.html`.
 
 `restore()` and **Program device** both run their config through `derive()` before
 programming the device, because a stored payload can outlive the code that wrote it. A country that is no longer
