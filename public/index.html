@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Enforces "nothing leaves the browser": no script on the page, ours or one
+         the Cloudflare zone injects, can load from or talk to another origin.
+         Same-origin /cdn-cgi/ traffic (bot detection) still works. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'"
+    />
     <title>Shortlife — a life in percent</title>
     <meta
       name="description"
