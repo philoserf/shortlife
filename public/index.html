@@ -519,16 +519,19 @@
         target="_blank"
         rel="noopener"
         >Shortlife v3</a
-      >. Life expectancy at birth from WHO Global Health Observatory (latest
-      available). A memento, not medical advice.
+      >. Life expectancy at birth from WHO Global Health Observatory (2023
+      estimates). A memento, not medical advice.
     </footer>
 
     <script>
       "use strict";
 
       // Life expectancy at birth in years, [male, female], from the WHO Global
-      // Health Observatory — the "Life expectancy at birth (years)" indicator,
-      // latest available year per country, rounded to 0.1y. Bundled in the page:
+      // Health Observatory — the "Life expectancy at birth (years)" indicator
+      // (WHOSIS_000001), 2023 estimates for every entry, rounded to 0.1y; 2023
+      // was the latest year in GHO when fetched on 2026-10-18. World is GLOBAL.
+      // WHO revises past years with each release, so re-fetch all entries for
+      // one year together rather than patching single rows. Bundled in the page:
       // the figures move once a year at most and a network call for them would
       // cost more than it is worth.
       //
@@ -538,43 +541,43 @@
       // everyone who chose it (they land back on "World").
       // prettier-ignore
       const LE = {
-      "World":          [70.8, 75.9],
-      "Australia":      [81.3, 85.4],
-      "Austria":        [79.4, 84.0],
-      "Belgium":        [79.3, 84.0],
-      "Brazil":         [72.0, 79.4],
-      "Canada":         [80.4, 84.1],
-      "Chile":          [77.4, 82.4],
-      "China":          [74.7, 80.5],
-      "Denmark":        [79.6, 83.3],
-      "Egypt":          [69.6, 74.1],
-      "Finland":        [79.2, 84.5],
-      "France":         [79.8, 85.7],
-      "Germany":        [78.7, 83.3],
-      "Greece":         [78.3, 83.6],
-      "Iceland":        [81.3, 84.4],
-      "India":          [69.5, 72.2],
-      "Indonesia":      [69.4, 73.3],
-      "Ireland":        [80.5, 84.0],
-      "Israel":         [80.8, 84.4],
-      "Italy":          [80.9, 84.9],
-      "Japan":          [81.5, 86.9],
-      "Mexico":         [72.1, 77.8],
-      "Netherlands":    [80.4, 83.5],
-      "New Zealand":    [80.4, 83.5],
-      "Nigeria":        [54.5, 55.8],
-      "Norway":         [81.1, 84.3],
-      "Poland":         [74.5, 81.9],
-      "Portugal":       [78.6, 84.4],
-      "Russia":         [68.2, 78.0],
-      "South Africa":   [62.2, 68.3],
-      "South Korea":    [80.3, 86.1],
-      "Spain":          [80.7, 86.2],
-      "Sweden":         [80.8, 84.0],
-      "Switzerland":    [81.8, 85.1],
-      "Turkey":         [76.4, 80.7],
-      "United Kingdom": [79.8, 83.0],
-      "United States":  [76.3, 81.4]
+      "World":          [70.6, 76.1],
+      "Australia":      [81.2, 84.8],
+      "Austria":        [79.5, 84.0],
+      "Belgium":        [80.3, 84.1],
+      "Brazil":         [72.8, 79.0],
+      "Canada":         [79.3, 83.4],
+      "Chile":          [79.1, 83.1],
+      "China":          [75.0, 81.1],
+      "Denmark":        [80.4, 83.9],
+      "Egypt":          [69.6, 74.4],
+      "Finland":        [78.7, 83.5],
+      "France":         [79.9, 85.0],
+      "Germany":        [78.8, 83.2],
+      "Greece":         [78.9, 85.0],
+      "Iceland":        [80.4, 83.3],
+      "India":          [69.3, 72.8],
+      "Indonesia":      [69.8, 75.8],
+      "Ireland":        [80.8, 84.0],
+      "Israel":         [80.2, 84.9],
+      "Italy":          [81.0, 84.8],
+      "Japan":          [81.2, 86.5],
+      "Mexico":         [72.3, 78.3],
+      "Netherlands":    [80.2, 83.0],
+      "New Zealand":    [79.3, 82.2],
+      "Nigeria":        [61.4, 64.5],
+      "Norway":         [81.3, 84.1],
+      "Poland":         [74.4, 81.7],
+      "Portugal":       [79.0, 84.6],
+      "Russia":         [66.3, 78.7],
+      "South Africa":   [62.0, 70.1],
+      "South Korea":    [80.6, 86.5],
+      "Spain":          [80.8, 85.7],
+      "Sweden":         [81.4, 84.4],
+      "Switzerland":    [82.2, 85.4],
+      "Turkey":         [74.5, 77.9],
+      "United Kingdom": [78.9, 82.6],
+      "United States":  [76.2, 80.9]
       };
 
       const MS_PER_YEAR = 365.2425 * 24 * 3600 * 1000;
