@@ -658,6 +658,8 @@
         const livedMs = Date.now() - cfg.birthMs;
         const pct = (livedMs / lifespanMs) * 100;
 
+        // derive() refused a future birthday, so livedMs goes negative only if
+        // the system clock is set back after programming; the clamps below cover that.
         const s = Math.max(0, pct).toFixed(7);
         if (s !== shownPct) {
           const dot = s.indexOf(".");
@@ -753,9 +755,7 @@
       function start(d) {
         cfg = d;
         $("engrave").textContent = d.name || "Unregistered";
-        $("serial").textContent = d.name
-          ? serialFor(d.name)
-          : "no. 000000 / 1 000 000";
+        $("serial").textContent = serialFor(d.name);
         $("pctSign").textContent = "%";
         $("statLe").textContent = `${d.le.toFixed(1)}y`; // fixed for this config
         $("stat").hidden = false;
@@ -868,7 +868,7 @@
         }
         // Fill the panel from the derived config, so a country that fell back to
         // World shows as World rather than a name the dropdown no longer has.
-        $("name").value = d.name || "";
+        $("name").value = d.name;
         $("birth").value = d.birth;
         countrySel.value = d.country;
         sex = d.sex;
