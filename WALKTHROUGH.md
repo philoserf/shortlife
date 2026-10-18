@@ -4,7 +4,7 @@ This document follows Shortlife's code in the order it runs: from the page reach
 
 ## Overview
 
-Shortlife is a browser emulation of Dries Depoorter's Shortlife v3 clock. The visitor enters their sex, birthday and country, and the device shows `age / life expectancy × 100`, updating in real time. The page stores those inputs in `localStorage` and makes no network calls of its own.
+Shortlife is a browser emulation of Dries Depoorter's Shortlife v3 clock. The visitor enters their sex, birthday and country, and the device shows `age / life expectancy × 100`, updating in real time. The page stores those inputs in `localStorage` and makes no network calls of its own. A Content-Security-Policy in `<head>` keeps any script on the page from reaching another origin.
 
 It uses plain HTML, CSS and JavaScript in a single file, with no build step, framework or runtime dependencies. A Cloudflare Worker serves the file as a static asset.
 
@@ -171,11 +171,11 @@ The script is a classic, non-module `<script>` at the end of `<body>` with `"use
 ```js
       // prettier-ignore
       const LE = {
-      "World":          [70.8, 75.9],
-      "Australia":      [81.3, 85.4],
+      "World":          [70.6, 76.1],
+      "Australia":      [81.2, 84.8],
 ```
 
-There are 37 entries, each `[male, female]` years of life expectancy at birth. Prettier skips the table so its columns stay aligned, which is also why its entries sit at the same indentation as `const` rather than one level deeper. Each key does three jobs: it is the dropdown label, its position sets dropdown order, and it is the string a stored config uses to name its country. The comment on the table says the figures are WHO GHO's latest available year. That claim is tracked in #17.
+There are 37 entries, each `[male, female]` years of life expectancy at birth. Prettier skips the table so its columns stay aligned, which is also why its entries sit at the same indentation as `const` rather than one level deeper. Each key does three jobs: it is the dropdown label, its position sets dropdown order, and it is the string a stored config uses to name its country. The comment above the table names the source: WHO GHO indicator `WHOSIS_000001`, 2023 estimates for every entry, fetched on 2026-10-18. It also says to re-fetch all rows together, because WHO revises past years with each release.
 
 ### Constants and the storage adapter
 
@@ -280,7 +280,7 @@ Brightness comes first, from the `shortlife.v3.b` key. If the key is missing, `p
 ```js
         // Fill the panel from the derived config, so a country that fell back to
         // World shows as World rather than a name the dropdown no longer has.
-        $("name").value = d.name || "";
+        $("name").value = d.name;
         $("birth").value = d.birth;
         countrySel.value = d.country;
         sex = d.sex;
@@ -345,9 +345,7 @@ The inputs were `{name:"Ada", sex:"female", birth:"1990-06-15", country:"Belgium
       function start(d) {
         cfg = d;
         $("engrave").textContent = d.name || "Unregistered";
-        $("serial").textContent = d.name
-          ? serialFor(d.name)
-          : "no. 000000 / 1 000 000";
+        $("serial").textContent = serialFor(d.name);
         $("pctSign").textContent = "%";
         $("statLe").textContent = `${d.le.toFixed(1)}y`; // fixed for this config
         $("stat").hidden = false;
@@ -435,7 +433,7 @@ What the back shows and which way the card faces are set separately:
 "ada lovelace"   → no. 116107 / 1 000 000
 ```
 
-The first line shows that `serialFor("")` already produces the placeholder `start()` uses for an empty name. The two branches of the ternary in `start()` therefore can't be told apart.
+The first line shows that `serialFor("")` produces the same placeholder `stop()` writes, which is why `start()` calls it unconditionally, even for an empty name.
 
 ### `render()`: the loop
 
@@ -450,6 +448,8 @@ The first line shows that `serialFor("")` already produces the placeholder `star
         const livedMs = Date.now() - cfg.birthMs;
         const pct = (livedMs / lifespanMs) * 100;
 
+        // derive() refused a future birthday, so livedMs goes negative only if
+        // the system clock is set back after programming; the clamps below cover that.
         const s = Math.max(0, pct).toFixed(7);
         if (s !== shownPct) {
           const dot = s.indexOf(".");
@@ -465,9 +465,9 @@ How often a write actually happens depends on the lifespan, as this transcript s
 
 ```text
 # seconds between changes of the 7th decimal
-Japan female     2.74 s
+Japan female     2.73 s
 World male       2.23 s
-Nigeria male     1.72 s
+Nigeria male     1.94 s
 ```
 
 The rest of the frame works the same way, comparing before writing:
@@ -489,7 +489,7 @@ The rest of the frame works the same way, comparing before writing:
 
 Past 100% the `over` class recolours the screen and the caption changes. The stat line's label switches from "remaining" to "over by" at the same instant (`remainY >= 0`), and the remaining time is shown as an absolute value. The last statement, `anim = requestAnimationFrame(render);`, keeps the loop going. The `if (!cfg) return;` guard at the top is what ends it: once `stop()` clears `cfg`, the next frame does nothing and schedules nothing.
 
-`derive()` refuses future birthdays, so `livedMs` can't be negative when the device is programmed. The two `Math.max(0, …)` clamps only matter if the system clock moves backwards afterwards.
+As the comment in `render()` says, `derive()` refuses future birthdays, so `livedMs` can't be negative when the device is programmed. The two `Math.max(0, …)` clamps only matter if the system clock moves backwards afterwards.
 
 ### `fmtYears()`: years and days
 
