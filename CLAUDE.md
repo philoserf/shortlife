@@ -122,6 +122,13 @@ not by the page; which features inject what changes with zone settings. Check wi
 `curl -s https://shortlife.philoserf.com/ | diff public/index.html -`. No beacon or
 tracking script belongs in `public/index.html`.
 
+The Content-Security-Policy `<meta>` at the top of the `<head>` enforces this
+rather than leaving it to convention: scripts load only from the page's own
+origin, and network calls go only there. That covers the zone's injected scripts too. It
+blocks Cloudflare Web Analytics' third-party beacon
+(`static.cloudflareinsights.com`) on purpose. Loosen the policy only if the
+privacy promise in the panel hint, meta description and README changes with it.
+
 `restore()` and **Program device** both run their config through `derive()` before
 programming the device, because a stored payload can outlive the code that wrote it. A country that is no longer
 an `LE` key falls back to `"World"`; a bad `sex` or an unparseable/future `birth` is
