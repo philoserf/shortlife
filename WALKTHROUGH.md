@@ -20,8 +20,8 @@ The page has two entry points:
 | `public/index.html` | The whole application: styles in `<head>`, the device markup, and one script holding the data, logic and handlers |
 | `wrangler.jsonc`    | Hosting: publish `public/` as static assets at one custom domain                                                  |
 | `Taskfile.yml`      | `setup`, `update`, `fmt`, `check`, `serve`, `deploy`                                                              |
-| `Brewfile`          | The toolchain: prettier, go-task, bun (which runs Wrangler through `bunx`)                                        |
-| `.prettierrc.json`  | Prettier settings; `task check` is the only automated gate                                                        |
+| `Brewfile`          | The toolchain: go-task, bun (which formats with `bun fmt` and runs Wrangler through `bunx`)                       |
+| `.prettierrc.json`  | Formatter settings, read by `bun fmt`; `task check` is the only automated gate                                    |
 
 Inside the script, data moves in one direction:
 
@@ -175,7 +175,7 @@ The script is a classic, non-module `<script>` at the end of `<body>` with `"use
       "Australia":      [81.2, 84.8],
 ```
 
-There are 37 entries, each `[male, female]` years of life expectancy at birth. Prettier skips the table so its columns stay aligned, which is also why its entries sit at the same indentation as `const` rather than one level deeper. Each key does three jobs: it is the dropdown label, its position sets dropdown order, and it is the string a stored config uses to name its country. The comment above the table names the source: WHO GHO indicator `WHOSIS_000001`, 2023 estimates for every entry, fetched on 2026-10-18. It also says to re-fetch all rows together, because WHO revises past years with each release.
+There are 37 entries, each `[male, female]` years of life expectancy at birth. The formatter skips the table so its columns stay aligned, which is also why its entries sit at the same indentation as `const` rather than one level deeper. Each key does three jobs: it is the dropdown label, its position sets dropdown order, and it is the string a stored config uses to name its country. The comment above the table names the source: WHO GHO indicator `WHOSIS_000001`, 2023 estimates for every entry, fetched on 2026-10-18. It also says to re-fetch all rows together, because WHO revises past years with each release.
 
 ### Constants and the storage adapter
 
@@ -632,4 +632,4 @@ The message replaces the hint text and turns accent red for 2.2 seconds. The tex
 
 ## Tooling
 
-The only check is prettier. `task check` runs `prettier --ignore-unknown --check .` and `task fmt` runs the same with `--write`. `.prettierrc.json` sets `proseWrap: "preserve"` and `embeddedLanguageFormatting: "off"`. Prettier reads both `.gitignore` and `.prettierignore`, so `.wrangler/` (in `.gitignore`) and `.issues/` (in `.prettierignore`, because the global git excludesfile that ignores it isn't visible to prettier) are both skipped. There are no tests and no CI, and pushing doesn't deploy anything.
+The only check is formatting. `task check` runs `bun fmt --check` and `task fmt` runs `bun fmt`, Bun's built-in Prettier-compatible formatter. `.prettierrc.json` sets `proseWrap: "preserve"` and `embeddedLanguageFormatting: "off"`. `bun fmt` reads both `.gitignore` and `.prettierignore`, so `.wrangler/` (in `.gitignore`) and `.issues/` (in `.prettierignore`, because the global git excludesfile that ignores it isn't visible to `bun fmt`) are both skipped. There are no tests and no CI, and pushing doesn't deploy anything.
