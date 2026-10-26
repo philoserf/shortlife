@@ -13,10 +13,10 @@ no tests.
 
 ```bash
 task            # list tasks
-task setup      # brew bundle --file=Brewfile (installs prettier, go-task, bun)
+task setup      # brew bundle --file=Brewfile (installs go-task, bun)
 task update     # brew upgrade the toolchain to current versions
-task fmt        # prettier --ignore-unknown --write .
-task check      # prettier --ignore-unknown --check .  (verify without writing)
+task fmt        # bun fmt
+task check      # bun fmt --check  (verify without writing)
 task serve      # bunx wrangler dev --port 8000  → http://localhost:8000
 task deploy     # task check, then bunx wrangler deploy
 ```
@@ -25,15 +25,16 @@ task deploy     # task check, then bunx wrangler deploy
 everything else, as production does. Opening `public/index.html` directly in a
 browser also works.
 
-Prettier is canonical: `task check` is expected to pass. Nothing here is version-pinned
-on purpose — the Brewfile is unversioned, so there is no pin to keep in sync.
+`bun fmt` is canonical: `task check` is expected to pass. It is Bun's built-in,
+Prettier-compatible formatter and reads `.prettierrc.json` and `.prettierignore`.
+Nothing here is version-pinned on purpose — the Brewfile is unversioned, so there is no pin to keep in sync.
 
-The accepted cost: a prettier release that changes formatting makes `task check`
+The accepted cost: a bun release that changes formatting makes `task check`
 fail, and so `task deploy` refuse, on a repo nobody touched. That is not a broken
 build — recover with `task update && task fmt` and commit the reformat on its own.
 
 The one exception is the `LE` table, which carries a `// prettier-ignore` so its
-column alignment survives. Prettier reproduces an ignored node's body verbatim, so
+column alignment survives. The formatter reproduces an ignored node's body verbatim, so
 that block's indentation is maintained by hand — keep new entries at the same
 6-space depth as their neighbors.
 

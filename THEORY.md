@@ -72,7 +72,7 @@ Every `localStorage` access goes through `readStore` / `writeStore`. The failure
 
 **Markup and script share the defaults.** The markup holds what shows before the script runs, and the script restates it in `stop()`. That is a convention rather than a principle. What it buys is a page that reads sensibly before, or without, its script.
 
-**The only automated gate is formatting.** `task check` (prettier) is the only check, and `task deploy` runs it first. There are no tests and no CI, and pushing deploys nothing. The behaviours the authors treated as load-bearing are recorded in commit messages instead, often with the evidence used to confirm them: "confirmed against the pre-fix build", "360 before, 0 after". Read the history as the test suite. The `LE` block is exempt from prettier through `// prettier-ignore`, and its 6-space indentation is maintained by hand.
+**The only automated gate is formatting.** `task check` (`bun fmt --check`) is the only check, and `task deploy` runs it first. There are no tests and no CI, and pushing deploys nothing. The behaviours the authors treated as load-bearing are recorded in commit messages instead, often with the evidence used to confirm them: "confirmed against the pre-fix build", "360 before, 0 after". Read the history as the test suite. The `LE` block is exempt from formatting through `// prettier-ignore`, and its 6-space indentation is maintained by hand.
 
 ## What the design makes cheap, and what it doesn't
 

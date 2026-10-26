@@ -14,20 +14,19 @@ tasks:
   update:
     desc: Upgrade the Brewfile toolchain to current versions
     cmds:
-      - brew upgrade prettier go-task bun
-      - prettier --version
+      - brew upgrade go-task bun
       - task --version
       - bun --version
 
   fmt:
-    desc: Format with prettier
+    desc: Format with bun fmt
     cmds:
-      - prettier --ignore-unknown --write .
+      - bun fmt
 
   check:
     desc: Verify formatting without writing
     cmds:
-      - prettier --ignore-unknown --check .
+      - bun fmt --check
 
   serve:
     desc: Serve public/ locally at http://localhost:8000, as the Worker does
