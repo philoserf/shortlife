@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.1
+
+### Changed
+
+- Formatting now runs on Bun's built-in `bun fmt` instead of Prettier. It reads the same `.prettierrc.json` and `.prettierignore`, and passed every existing file unchanged.
+- The release check now takes the version from the newest heading in this file, the only place one is recorded.
+
+Nothing on the page changed: `public/index.html` is identical to 1.1.0's.
+
 ## 1.1.0
 
 ### Changed
