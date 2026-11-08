@@ -1,2 +1,0 @@
-# Ignored through the global core.excludesfile, which bun fmt does not read.
-.issues/
