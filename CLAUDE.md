@@ -25,8 +25,8 @@ task deploy     # task check, then bunx wrangler deploy
 everything else, as production does. Opening `public/index.html` directly in a
 browser also works.
 
-`bun fmt` is canonical: `task check` is expected to pass. It is Bun's built-in,
-Prettier-compatible formatter and reads `.prettierrc.json` and `.prettierignore`.
+`bun fmt` is canonical: `task check` is expected to pass. It is Bun's built-in
+formatter, configured by the `[fmt]` table in `bunfig.toml`.
 Nothing here is version-pinned on purpose — the Brewfile is unversioned, so there is no pin to keep in sync.
 
 The accepted cost: a bun release that changes formatting makes `task check`

@@ -21,7 +21,7 @@ The page has two entry points:
 | `wrangler.jsonc`    | Hosting: publish `public/` as static assets at one custom domain                                                  |
 | `Taskfile.yml`      | `setup`, `update`, `fmt`, `check`, `serve`, `deploy`                                                              |
 | `Brewfile`          | The toolchain: go-task, bun (which formats with `bun fmt` and runs Wrangler through `bunx`)                       |
-| `.prettierrc.json`  | Formatter settings, read by `bun fmt`; `task check` is the only automated gate                                    |
+| `bunfig.toml`       | Formatter settings, read by `bun fmt`; `task check` is the only automated gate                                    |
 
 Inside the script, data moves in one direction:
 
@@ -632,4 +632,4 @@ The message replaces the hint text and turns accent red for 2.2 seconds. The tex
 
 ## Tooling
 
-The only check is formatting. `task check` runs `bun fmt --check` and `task fmt` runs `bun fmt`, Bun's built-in Prettier-compatible formatter. `.prettierrc.json` sets `proseWrap: "preserve"` and `embeddedLanguageFormatting: "off"`. `bun fmt` reads both `.gitignore` and `.prettierignore`, so `.wrangler/` (in `.gitignore`) and `.issues/` (in `.prettierignore`, because the global git excludesfile that ignores it isn't visible to `bun fmt`) are both skipped. There are no tests and no CI, and pushing doesn't deploy anything.
+The only check is formatting. `task check` runs `bun fmt --check` and `task fmt` runs `bun fmt`, Bun's built-in formatter. `bunfig.toml` sets `embeddedLanguageFormatting = "off"`; prose wrap is preserved by default. `bun fmt` skips what `.gitignore` lists, so `.wrangler/` is left alone. There are no tests and no CI, and pushing doesn't deploy anything.
